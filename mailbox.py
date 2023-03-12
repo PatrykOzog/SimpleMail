@@ -83,6 +83,10 @@ class MainWindow(QMainWindow):
                         message_content += f'From: {mail_from}\nSubject: {mail_subject}\nContent: {mail_content}\n\n'
 
         self.mail_text_edit.setPlainText(message_content)
+        try:
+            self.send_message(None, mail_from, "Auto respond", "This is auto respond message")
+        except:
+            pass
 
     def compose_message(self):
         compose_window = QDialog(self)
@@ -116,7 +120,7 @@ class MainWindow(QMainWindow):
         grid.addWidget(cancel_button, 4, 1)
 
         compose_window.setLayout(grid)
-        compose_window.exec_()
+        compose_window.exec()
 
     def send_message(self, window, to, subject, body):
         message = MIMEMultipart()
@@ -129,7 +133,10 @@ class MainWindow(QMainWindow):
             server.login(self.email_address, self.email_password)
             server.sendmail(self.email_address, to, message.as_string())
 
-        window.accept()
+        try:
+            window.accept()
+        except:
+            pass
 
 
 if __name__ == "__main__":
