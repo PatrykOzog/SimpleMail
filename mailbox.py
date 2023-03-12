@@ -1,14 +1,13 @@
-
 import smtplib
 import imaplib
 import email
+from nltk.corpus import wordnet
 from email.message import EmailMessage
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import (QApplication, QDialog, QGridLayout, QHBoxLayout,
-                               QLabel, QLineEdit, QListWidget, QListWidgetItem,
-                               QPushButton, QTextEdit, QVBoxLayout, QWidget, QMainWindow)
+from PySide6.QtWidgets import (QApplication, QDialog, QGridLayout, QLabel, QLineEdit,
+                               QPushButton, QTextEdit, QMainWindow)
 
 
 class MainWindow(QMainWindow):
@@ -45,6 +44,8 @@ class MainWindow(QMainWindow):
         mail.login(self.email_address, self.email_password)
         mail.select('inbox')
         status, data = mail.search(None, 'UNSEEN')
+        filter_words = ["money", "sell", "buy", "transaction"]
+        filtered = False
         mail_ids = []
         for block in data:
             mail_ids += block.split()
@@ -58,14 +59,27 @@ class MainWindow(QMainWindow):
                     message = email.message_from_bytes(response_part[1])
                     mail_from = message['from']
                     mail_subject = message['subject']
+                    synonyms = []
+
+                    for word in filter_words:
+                        for syn in wordnet.synsets(word):
+                            for i in syn.lemmas():
+                                synonyms.append(i.name())
+
                     if message.is_multipart():
                         mail_content = ''
                         for part in message.get_payload():
                             if part.get_content_type() == 'text/plain':
                                 mail_content += part.get_payload()
-                        message_content += f'From: {mail_from}\nSubject: {mail_subject}\nContent: {mail_content}\n\n'
                     else:
                         mail_content = message.get_payload()
+
+                    split_content = mail_content.split()
+                    for content in split_content:
+                        if content in synonyms:
+                            filtered = True
+
+                    if not filtered:
                         message_content += f'From: {mail_from}\nSubject: {mail_subject}\nContent: {mail_content}\n\n'
 
         self.mail_text_edit.setPlainText(message_content)
